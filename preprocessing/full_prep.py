@@ -111,7 +111,7 @@ def savenpy(id,filelist,prep_folder,data_path,use_existing=True):
 def full_prep(data_path,prep_folder,n_worker = None,use_existing=True):
     warnings.filterwarnings("ignore")
     if not os.path.exists(prep_folder):
-        os.mkdir(prep_folder)
+        os.makedirs(prep_folder)
 
             
     print('starting preprocessing')
@@ -128,6 +128,6 @@ def full_prep(data_path,prep_folder,n_worker = None,use_existing=True):
     return filelist
 
 if __name__=='__main__':
-    data_path='/home/ly/data/dsb2017/sample_images'
+    data_path='/data/lungCT_subset/dsb2017/sample_images'
     prep_folder='/home/ly/data/dsb2017/sample_processing'
-    full_prep(data_path,prep_folder,n_worker=1)
+    full_prep(data_path,prep_folder,n_worker=4)
