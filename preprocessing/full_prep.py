@@ -11,6 +11,7 @@ from multiprocessing import Pool
 from functools import partial
 from step1 import step1_python
 import warnings
+import time
 
 def process_mask(mask):
     convex_mask = np.copy(mask)
@@ -59,7 +60,8 @@ def resample(imgs, spacing, new_spacing,order = 2):
     else:
         raise ValueError('wrong shape')
 
-def savenpy(id,filelist,prep_folder,data_path,use_existing=True):      
+def savenpy(id,filelist,prep_folder,data_path,use_existing=True): 
+    time_s=time.time()
     resolution = np.array([1,1,1])
     name = filelist[id]
     if use_existing:
@@ -102,10 +104,12 @@ def savenpy(id,filelist,prep_folder,data_path,use_existing=True):
         sliceim = sliceim2[np.newaxis,...]
         np.save(os.path.join(prep_folder,name+'_clean'),sliceim)
         np.save(os.path.join(prep_folder,name+'_label'),np.array([[0,0,0,0]]))
+        time_e=time.time()
     except:
         print('bug in '+name)
         raise
-    print(name+' done')
+    print (name+' done')
+    print ("  time: %.1fs " %(time_e-time_s))
 
     
 def full_prep(data_path,prep_folder,n_worker = None,use_existing=True):
@@ -129,5 +133,5 @@ def full_prep(data_path,prep_folder,n_worker = None,use_existing=True):
 
 if __name__=='__main__':
     data_path='/data/lungCT/dsb2017/sample_images'
-    prep_folder='/home/ly/data/dsb2017/sample_processing'
-    full_prep(data_path,prep_folder,n_worker=4)
+    prep_folder='/data/lungCT/dsb2017/generation_data/sample_images'
+    full_prep(data_path,prep_folder,n_worker=1)
