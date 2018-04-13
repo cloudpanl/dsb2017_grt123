@@ -128,6 +128,6 @@ def full_prep(data_path,prep_folder,n_worker = None,use_existing=True):
     return filelist
 
 if __name__=='__main__':
-    data_path='/data/lungCT_subset/dsb2017/sample_images'
+    data_path='/data/lungCT/dsb2017/sample_images'
     prep_folder='/home/ly/data/dsb2017/sample_processing'
     full_prep(data_path,prep_folder,n_worker=4)
