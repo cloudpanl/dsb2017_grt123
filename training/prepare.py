@@ -198,7 +198,7 @@ def savenpy_luna(id,annos,filelist,luna_segment,luna_data,savepath):
     m1 = Mask==3
     m2 = Mask==4
     Mask = m1+m2
-    
+    print
     xx,yy,zz= np.where(Mask)
     box = np.array([[np.min(xx),np.max(xx)],[np.min(yy),np.max(yy)],[np.min(zz),np.max(zz)]])
     box = box*np.expand_dims(spacing,1)/np.expand_dims(resolution,1)
@@ -371,7 +371,7 @@ def prepare_luna():
     f= open(finished_flag,"w+")
     
 if __name__=='__main__':
-    full_prep(step1=True,step2=True)
-#    prepare_luna()
-#    preprocess_luna()
+#    full_prep(step1=True,step2=True)
+    prepare_luna()
+    preprocess_luna()
     

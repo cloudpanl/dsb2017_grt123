@@ -1,8 +1,8 @@
 config = {'stage1_data_path':'/data/lungCT/dsb2017/sample_images',
-          'luna_raw':'/work/DataBowl3/luna/raw/',
-          'luna_segment':'/work/DataBowl3/luna/seg-lungs-LUNA16/',
+          'luna_raw':'/data/lungCT/luna/raw',
+          'luna_segment':'/data/lungCT/luna/seg-lungs-LUNA16',
           
-          'luna_data':'/work/DataBowl3/luna/allset',
+          'luna_data':'/data/lungCT/luna/allset',
           'preprocess_result_path':'/data/lungCT/dsb2017/generation_data/',       
           
           'luna_abbr':'./detector/labels/shorter.csv',
