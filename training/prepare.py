@@ -272,7 +272,7 @@ def preprocess_luna():
         annos = np.array(pandas.read_csv(luna_label))
 
         if not os.path.exists(savepath):
-            os.mkdir(savepath)
+            os.makedirs(savepath)
 
         
         pool = Pool()
@@ -299,7 +299,7 @@ def prepare_luna():
 
         subsetdirs = [os.path.join(luna_raw,f) for f in os.listdir(luna_raw) if f.startswith('subset') and os.path.isdir(os.path.join(luna_raw,f))]
         if not os.path.exists(luna_data):
-            os.mkdir(luna_data)
+            os.makedirs(luna_data)
 
 #         allnames = []
 #         for d in subsetdirs:
