@@ -11,7 +11,13 @@ import matplotlib.pyplot as plt
 
 from skimage import measure, morphology
 
+import SimpleITK as sitk
 
+import csv
+import os,time
+from PIL import Image
+
+from mpl_toolkits.mplot3d import Axes3D
 
 def load_scan(path):
     slices = [dicom.read_file(path + '/' + s,force=True) for s in os.listdir(path)]
@@ -33,6 +39,14 @@ def load_scan(path):
         s.SliceThickness = slice_thickness
         
     return slices
+
+
+def load_itk_image(filename):
+    itkimage = sitk.ReadImage(filename)
+    numpyImage = sitk.GetArrayFromImage(itkimage)
+    numpyOrigin = np.array(list(reversed(itkimage.GetOrigin())))
+    numpySpacing = np.array(list(reversed(itkimage.GetSpacing())))
+    return numpyImage, numpyOrigin, numpySpacing
 
 def get_pixels_hu(slices):
     image = np.stack([s.pixel_array for s in slices])
@@ -246,6 +260,21 @@ def step1_python(case_path):
     bw1, bw2, bw = two_lung_only(bw, spacing)
     return case_pixels, bw1, bw2, spacing
 
+def step1_luna(case_path):
+    case_pixels,ori,spacing=load_itk_image(os.path.join(luna_dir,id_list[0]))
+    bw = binarize_per_slice(case_pixels, spacing)
+    flag = 0
+    cut_num = 0
+    cut_step = 2
+    bw0 = np.copy(bw)
+    while flag == 0 and cut_num < bw.shape[0]:
+        bw = np.copy(bw0)
+        bw, flag = all_slice_analysis(bw, spacing, cut_num=cut_num, vol_limit=[0.68,7.5])
+        cut_num = cut_num + cut_step
+
+    bw = fill_hole(bw)
+    bw1, bw2, bw = two_lung_only(bw, spacing)
+    return case_pixels, bw1, bw2, spacing    
 
 def image_linear_trans(img,min_val,max_val,clip=None):
     image=np.copy(img)
@@ -258,39 +287,57 @@ def image_linear_trans(img,min_val,max_val,clip=None):
     return (k*image+b).astype('uint8')
     
 if __name__ == '__main__':
-    INPUT_FOLDER = '/home/ly/data/dsb2017/sample_images'
+    INPUT_FOLDER = '/data/lungCT/dsb2017/sample_images'
     patients = os.listdir(INPUT_FOLDER)
     patients.sort()
-    case_pixels, m1, m2, spacing = step1_python(os.path.join(INPUT_FOLDER,patients[0]))
-    plt.imshow(m1[60])
-    plt.figure()
-    plt.imshow(m2[60])
     
-    raw=case_pixels[60]
-    raw1=image_linear_trans(raw,0,255,[-1200,600])
+#    case_pixels, m1, m2, spacing = step1_python(os.path.join(INPUT_FOLDER,patients[0]))
+    b=load_scan(os.path.join(INPUT_FOLDER,patients[0]))
+    cube,spacing=get_pixels_hu(b)
+    bw=binarize_per_slice(cube,spacing)
     
-    mask=m1[60]
-    rm=raw1*mask
     
-    for i in range(case_pixels.shape[0]):
-        raw=case_pixels[i]
-        raw1=image_linear_trans(raw,0,255,[-1200,600])
-        
-        mask1=m1[i]
-        mask2=m2[i]
-        rm1=raw1*mask1
-        rm2=raw1*mask2
-        
-        
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-        ax1.imshow(rm1,cmap=plt.cm.gray)
-        ax1.axis('off')
-        ax2.imshow(rm2, cmap=plt.cm.gray)
-        ax2.axis('off')
-        fig.savefig('/home/ly/data/dsb2017/sample_processing/'+str(i)+'.jpg')
+    
+    luna_dir='/data/lungCT/luna/subset0'
+    id_list=os.listdir(luna_dir)
+    id_list=filter(lambda x:x.split('.')[-1]=='mhd' ,id_list)
+    cube,ori,spacing=load_itk_image(os.path.join(luna_dir,id_list[0]))
+#    bw=binarize_per_slice(cube,spacing)
+#    bw,flag=all_slice_analysis(bw,spacing)
+    
+    cube1,ori1,spacing1=load_itk_image(os.path.join('/data/lungCT/luna/seg-lungs-LUNA16',id_list[0]))
+    
+#    ooxx=step1_luna(os.path.join(luna_dir,id_list[0]))
 
-        fig.tight_layout()
-        plt.show()
+#    plt.imshow(m1[60])
+#    plt.figure()
+#    plt.imshow(m2[60])
+#    
+#    raw=case_pixels[60]
+#    raw1=image_linear_trans(raw,0,255,[-1200,600])
+#    
+#    mask=m1[60]
+#    rm=raw1*mask
+#    
+#    for i in range(case_pixels.shape[0]):
+#        raw=case_pixels[i]
+#        raw1=image_linear_trans(raw,0,255,[-1200,600])
+#        
+#        mask1=m1[i]
+#        mask2=m2[i]
+#        rm1=raw1*mask1
+#        rm2=raw1*mask2
+#        
+#        
+#        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+#        ax1.imshow(rm1,cmap=plt.cm.gray)
+#        ax1.axis('off')
+#        ax2.imshow(rm2, cmap=plt.cm.gray)
+#        ax2.axis('off')
+#        fig.savefig('/home/ly/data/dsb2017/sample_processing/'+str(i)+'.jpg')
+#
+#        fig.tight_layout()
+#        plt.show()
 
     
 #    dir_patient1=os.path.join(INPUT_FOLDER,patients[3])
@@ -312,8 +359,9 @@ if __name__ == '__main__':
     
     
     
-#     first_patient = load_scan(INPUT_FOLDER + patients[25])
-#     first_patient_pixels, spacing = get_pixels_hu(first_patient)
+#    first_patient = load_scan(os.path.join(INPUT_FOLDER , patients[1]))
+#    first_patient_pixels, spacing = get_pixels_hu(first_patient)
+    
 #     plt.hist(first_patient_pixels.flatten(), bins=80, color='c')
 #     plt.xlabel("Hounsfield Units (HU)")
 #     plt.ylabel("Frequency")

@@ -13,6 +13,16 @@ from step1 import step1_python
 import warnings
 import time
 
+
+import SimpleITK as sitk
+import pandas as pd
+import csv
+import os,time
+from PIL import Image
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+
 def process_mask(mask):
     convex_mask = np.copy(mask)
     for i_layer in range(convex_mask.shape[0]):
@@ -132,6 +142,7 @@ def full_prep(data_path,prep_folder,n_worker = None,use_existing=True):
     return filelist
 
 if __name__=='__main__':
+    
     data_path='/data/lungCT/dsb2017/sample_images'
     prep_folder='/data/lungCT/dsb2017/generation_data/sample_images'
-    full_prep(data_path,prep_folder,n_worker=1)
+#    full_prep(data_path,prep_folder,n_worker=1)

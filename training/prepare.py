@@ -21,6 +21,7 @@ import sys
 sys.path.append('../preprocessing')
 from step1 import step1_python
 import warnings
+import pandas as pd
 
 def resample(imgs, spacing, new_spacing,order=2):
     if len(imgs.shape)==3:
@@ -184,12 +185,13 @@ def full_prep(step1=True,step2 = True):
         print('end preprocessing')
     f= open(finished_flag,"w+")        
 
-def savenpy_luna(id,annos,filelist,luna_segment,luna_data,savepath):
+def savenpy_luna(id,annos,luna_segment,luna_data,savepath):
     islabel = True
     isClean = True
     resolution = np.array([1,1,1])
 #     resolution = np.array([2,2,2])
-    name = filelist[id]
+#    name = filelist[id]
+    name=id
     
     Mask,origin,spacing,isflip = load_itk_image(os.path.join(luna_segment,name+'.mhd'))
     if isflip:
@@ -206,8 +208,11 @@ def savenpy_luna(id,annos,filelist,luna_segment,luna_data,savepath):
     margin = 5
     extendbox = np.vstack([np.max([[0,0,0],box[:,0]-margin],0),np.min([newshape,box[:,1]+2*margin],axis=0).T]).T
 
-    this_annos = np.copy(annos[annos[:,0]==int(name)])        
-
+    this_annos=annos[annos.seriesuid==name]
+#    this_annos = np.copy(annos[annos[:,0]==name]) 
+    this_annos.iloc[:,0]=666       
+    this_annos=np.array(this_annos)
+    
     if isClean:
         convex_mask = m1
         dm1 = process_mask(m1)
@@ -237,7 +242,7 @@ def savenpy_luna(id,annos,filelist,luna_segment,luna_data,savepath):
 
     if islabel:
 
-        this_annos = np.copy(annos[annos[:,0]==int(name)])
+#        this_annos = np.copy(annos[annos[:,0]==int(name)])
         label = []
         if len(this_annos)>0:
             
@@ -259,6 +264,8 @@ def savenpy_luna(id,annos,filelist,luna_segment,luna_data,savepath):
         np.save(os.path.join(savepath,name+'_label.npy'),label2)
         
     print(name)
+
+
 
 def preprocess_luna():
     luna_segment = config['luna_segment']
@@ -369,9 +376,54 @@ def prepare_luna():
                 f.writelines(content)
     print('end changing luna name')
     f= open(finished_flag,"w+")
+
+
+def batch_process_luna(luna_segment_dir,luna_data_dir,annotations_path,savepath):
+    
+    pass
     
 if __name__=='__main__':
 #    full_prep(step1=True,step2=True)
-    prepare_luna()
-    preprocess_luna()
+    
+#    prepare_luna()
+#    preprocess_luna()
+    
+    luna_segment_dir = config['luna_segment']
+    savepath = config['preprocess_result_path']
+    luna_data_dir = '/data/lungCT/luna/subset0'
+    luna_label = config['luna_label']
+    annotations_path='/data/lungCT/luna/annotations.csv'
+    
+    
+    df_anno=pd.read_csv(annotations_path)
+    
+    patients_list=os.listdir(luna_data_dir)
+    patients_list=filter(lambda x:x.split('.')[-1]=='mhd' ,patients_list)
+    patients_list=[x.split('.mhd')[0] for x in patients_list]
+    
+    already_list=os.listdir(savepath)
+    
+    already_list=filter(lambda x:x.split('_')[-1]=='label.npy' ,already_list) 
+    already_list=[x.split('_label.npy')[0] for x in already_list]
+    
+    wait_list=[x for x in patients_list if x not in already_list]
+    print ('this dir has %d patient CT'%len(patients_list))
+    print ('we have already processed %d CT'%len(already_list))
+
+
+    pool = Pool()
+    partial_savenpy_luna = partial(savenpy_luna,annos=df_anno,
+                                   luna_segment=luna_segment_dir,luna_data=luna_data_dir,savepath=savepath)
+
+    N = len(wait_list)
+    #savenpy(1)
+    _=pool.map(partial_savenpy_luna,wait_list)
+    pool.close()
+    pool.join()
+    print('end preprocessing luna')    
+ 
+    
+#    id1='1.3.6.1.4.1.14519.5.2.1.6279.6001.832260670372728970918746541371'
+#    savenpy_luna(id1,df_anno,luna_segment_dir,luna_data_dir,savepath)
+    
     
