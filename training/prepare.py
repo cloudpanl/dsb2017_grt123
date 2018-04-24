@@ -405,17 +405,22 @@ def batch_process_luna(luna_data_dir,savepath,luna_segment_dir,annotations_path)
     _=pool.map(partial_savenpy_luna,wait_list)
     pool.close()
     pool.join()
-    print('this dir been done!')        
+    print('complete %s'%savepath)        
     
 if __name__=='__main__':
     
-    luna_segment_dir = '/data/lungCT/luna/seg-lungs-LUNA16'
-    savepath = '/data/lungCT/luna/temp/luna_npy'
-    luna_data_dir = '/data/lungCT/luna/subset0'
-    annotations_path='/data/lungCT/luna/annotations.csv'
+    subsets=[0,1]
+    subsets=map(lambda x : 'subset'+str(x),subsets)
     
-    
-    batch_process_luna(luna_data_dir,savepath,luna_segment_dir,annotations_path)
+    for subset in subsets:
+        
+        luna_segment_dir = '/data/lungCT/luna/seg-lungs-LUNA16'
+        savepath = '/data/lungCT/luna/temp/luna_npy/'+subset
+        luna_data_dir = '/data/lungCT/luna/'+subset
+        annotations_path='/data/lungCT/luna/annotations.csv'
+        
+        
+        batch_process_luna(luna_data_dir,savepath,luna_segment_dir,annotations_path)
     
     
 #    df_anno=pd.read_csv(annotations_path)
