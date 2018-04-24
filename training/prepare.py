@@ -378,23 +378,10 @@ def prepare_luna():
     f= open(finished_flag,"w+")
 
 
-def batch_process_luna(luna_segment_dir,luna_data_dir,annotations_path,savepath):
-    
-    pass
-    
-if __name__=='__main__':
-#    full_prep(step1=True,step2=True)
-    
-#    prepare_luna()
-#    preprocess_luna()
-    
-    luna_segment_dir = config['luna_segment']
-    savepath = config['preprocess_result_path']
-    luna_data_dir = '/data/lungCT/luna/subset0'
-    luna_label = config['luna_label']
-    annotations_path='/data/lungCT/luna/annotations.csv'
-    
-    
+def batch_process_luna(luna_data_dir,savepath,luna_segment_dir,annotations_path):
+    if not os.path.exists(savepath):
+        os.makedirs(savepath)
+        
     df_anno=pd.read_csv(annotations_path)
     
     patients_list=os.listdir(luna_data_dir)
@@ -415,15 +402,50 @@ if __name__=='__main__':
     partial_savenpy_luna = partial(savenpy_luna,annos=df_anno,
                                    luna_segment=luna_segment_dir,luna_data=luna_data_dir,savepath=savepath)
 
-    N = len(wait_list)
-    #savenpy(1)
     _=pool.map(partial_savenpy_luna,wait_list)
     pool.close()
     pool.join()
-    print('end preprocessing luna')    
+    print('this dir been done!')        
+    
+if __name__=='__main__':
+    
+    luna_segment_dir = '/data/lungCT/luna/seg-lungs-LUNA16'
+    savepath = '/data/lungCT/luna/temp/luna_npy'
+    luna_data_dir = '/data/lungCT/luna/subset0'
+    annotations_path='/data/lungCT/luna/annotations.csv'
+    
+    
+    batch_process_luna(luna_data_dir,savepath,luna_segment_dir,annotations_path)
+    
+    
+#    df_anno=pd.read_csv(annotations_path)
+#    
+#    patients_list=os.listdir(luna_data_dir)
+#    patients_list=filter(lambda x:x.split('.')[-1]=='mhd' ,patients_list)
+#    patients_list=[x.split('.mhd')[0] for x in patients_list]
+#    
+#    already_list=os.listdir(savepath)
+#    
+#    already_list=filter(lambda x:x.split('_')[-1]=='label.npy' ,already_list) 
+#    already_list=[x.split('_label.npy')[0] for x in already_list]
+#    
+#    wait_list=[x for x in patients_list if x not in already_list]
+#    print ('this dir has %d patient CT'%len(patients_list))
+#    print ('we have already processed %d CT'%len(already_list))
+#
+#
+#    pool = Pool()
+#    partial_savenpy_luna = partial(savenpy_luna,annos=df_anno,
+#                                   luna_segment=luna_segment_dir,luna_data=luna_data_dir,savepath=savepath)
+#
+#    N = len(wait_list)
+#    #savenpy(1)
+#    _=pool.map(partial_savenpy_luna,wait_list)
+#    pool.close()
+#    pool.join()
+#    print('end preprocessing luna')    
  
     
-#    id1='1.3.6.1.4.1.14519.5.2.1.6279.6001.832260670372728970918746541371'
-#    savenpy_luna(id1,df_anno,luna_segment_dir,luna_data_dir,savepath)
+
     
     
